@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knörr — Maqueta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --abyss:#071a2b; --hull:#0d2a40; --hull-2:#11354f; --sea:#1d6087;
+    --brass:#c9a24b; --brass-soft:#e0c074; --foam:#eee6d3; --foam-dim:#a9b6c4;
+    --signal:#d6573c; --teal:#3fa79f; --line:rgba(201,162,75,.22); --line-soft:rgba(238,230,211,.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(29,96,135,.25), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(201,162,75,.10), transparent 55%),
+      var(--abyss);
+    color:var(--foam); min-height:100vh; -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'JetBrains Mono',monospace}
+  .shell{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+
+  .rail{background:linear-gradient(180deg,var(--hull),var(--abyss));border-right:1px solid var(--line);
+    padding:26px 18px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh}
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:26px}
+  .brand h1{font-family:'Fraunces',serif;font-weight:800;font-size:19px;line-height:1.05;letter-spacing:.2px}
+  .brand h1 span{display:block;font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;font-family:'Inter';margin-top:3px;color:var(--foam-dim)}
+  .navlabel{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--foam-dim);margin:18px 8px 8px}
+  .navbtn{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:transparent;border:0;
+    color:var(--foam-dim);font:500 14px/1 'Inter';padding:11px 12px;border-radius:9px;cursor:pointer;transition:background .18s,color .18s}
+  .navbtn .dot{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.5}
+  .navbtn:hover{background:var(--line-soft);color:var(--foam)}
+  .navbtn.active{background:rgba(201,162,75,.12);color:var(--foam)}
+  .navbtn.active .dot{background:var(--brass);opacity:1}
+  .rail-foot{margin-top:auto;font-size:11px;color:var(--foam-dim);line-height:1.5;border-top:1px solid var(--line-soft);padding-top:16px}
+  .rail-foot b{color:var(--brass)}
+
+  .main{padding:0 0 60px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 38px;border-bottom:1px solid var(--line-soft);
+    position:sticky;top:0;background:rgba(7,26,43,.82);backdrop-filter:blur(8px);z-index:5}
+  .coords{font-family:'JetBrains Mono';font-size:11px;color:var(--foam-dim);letter-spacing:1px}
+  .coords b{color:var(--brass)}
+  .tag{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--abyss);background:var(--brass);padding:5px 11px;border-radius:20px;font-weight:700}
+  .wrap{padding:34px 38px;max-width:1180px}
+
+  .voyage{position:relative;border:1px solid var(--line);border-radius:18px;
+    background:linear-gradient(180deg,rgba(17,53,79,.55),rgba(13,42,64,.35));overflow:hidden;margin-bottom:34px}
+  .voyage-inner{padding:30px 34px}
+  .eyebrow{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--brass);font-weight:600;margin-bottom:10px}
+  .voyage h2{font-family:'Fraunces';font-weight:600;font-size:30px;line-height:1.1;max-width:560px}
+  .voyage p{color:var(--foam-dim);margin-top:10px;max-width:540px;font-size:14.5px;line-height:1.55}
+  .route{display:flex;align-items:stretch;margin-top:30px;position:relative}
+  .leg{flex:1;position:relative;cursor:pointer}
+  .leg .line{height:2px;background:repeating-linear-gradient(90deg,var(--brass) 0 8px,transparent 8px 16px);position:absolute;top:13px;left:50%;right:-50%}
+  .leg:last-child .line{display:none}
+  .port{display:flex;flex-direction:column;align-items:flex-start;gap:10px;position:relative;z-index:2}
+  .pin{width:28px;height:28px;border-radius:50%;border:2px solid var(--brass);background:var(--abyss);display:grid;place-items:center;
+    font-size:12px;color:var(--brass);font-weight:700;font-family:'JetBrains Mono';transition:transform .2s,background .2s,color .2s}
+  .leg:hover .pin{transform:scale(1.12);background:var(--brass);color:var(--abyss)}
+  .leg.done .pin{background:var(--brass);color:var(--abyss)}
+  .port .pname{font-family:'Fraunces';font-weight:600;font-size:16px}
+  .port .pdesc{font-size:12px;color:var(--foam-dim);max-width:170px;line-height:1.45}
+  .port .pstat{font-family:'JetBrains Mono';font-size:11px;color:var(--teal)}
+  .compass{position:absolute;right:26px;top:26px;opacity:.5}
+
+  .section{display:none;animation:rise .4s ease both}
+  .section.active{display:block}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .sec-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:14px}
+  .sec-head .sh-eye{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--brass);font-weight:600}
+  .sec-head h3{font-family:'Fraunces';font-weight:600;font-size:24px;margin-top:6px}
+  .sec-head p{color:var(--foam-dim);font-size:13.5px;margin-top:4px;max-width:560px}
+  .btn{background:var(--brass);color:var(--abyss);border:0;font:700 13px 'Inter';padding:11px 18px;border-radius:9px;cursor:pointer;letter-spacing:.3px;transition:filter .15s,transform .1s}
+  .btn:hover{filter:brightness(1.07)}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:transparent;border:1px solid var(--brass);color:var(--brass)}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(176px,1fr));gap:14px;margin-bottom:24px}
+  .kpi{border:1px solid var(--line);border-radius:14px;padding:18px;background:linear-gradient(160deg,rgba(17,53,79,.5),rgba(13,42,64,.25))}
+  .kpi .k-lab{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--foam-dim)}
+  .kpi .k-val{font-family:'Fraunces';font-weight:600;font-size:30px;margin-top:8px;letter-spacing:.5px}
+  .kpi .k-sub{font-family:'JetBrains Mono';font-size:11px;margin-top:6px}
+  .up{color:var(--teal)}.down{color:var(--signal)}
+
+  .grid2{display:grid;grid-template-columns:1.5fr 1fr;gap:18px}
+  @media(max-width:880px){.grid2{grid-template-columns:1fr}}
+  .panel{border:1px solid var(--line);border-radius:14px;padding:20px;background:rgba(13,42,64,.3)}
+  .panel h4{font-family:'Fraunces';font-weight:600;font-size:16px;margin-bottom:4px}
+  .panel .ph{font-size:12px;color:var(--foam-dim);margin-bottom:16px}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--foam-dim);font-weight:600;padding:0 10px 11px;border-bottom:1px solid var(--line-soft)}
+  td{padding:13px 10px;border-bottom:1px solid var(--line-soft)}
+  tbody tr:hover{background:var(--line-soft)}
+  .sku{font-family:'JetBrains Mono';font-size:11px;color:var(--foam-dim)}
+  .price{font-family:'JetBrains Mono';font-weight:500}
+  .badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px}
+  .b-ok{background:rgba(63,167,159,.15);color:var(--teal)}
+  .b-wait{background:rgba(201,162,75,.15);color:var(--brass-soft)}
+  .b-warn{background:rgba(214,87,60,.15);color:var(--signal)}
+
+  .pillrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .pill{font-size:12px;color:var(--foam-dim);border:1px solid var(--line);border-radius:20px;padding:7px 13px;display:flex;gap:7px;align-items:center}
+
+  .sync-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line-soft)}
+  .sync-row:last-child{border:0}
+  .sync-name{font-weight:500}
+  .sync-meta{font-family:'JetBrains Mono';font-size:11px;color:var(--foam-dim)}
+  .toggle{width:40px;height:22px;border-radius:20px;background:var(--brass);position:relative;cursor:pointer;flex:0 0 auto}
+  .toggle::after{content:"";position:absolute;width:16px;height:16px;border-radius:50%;background:var(--abyss);top:3px;right:3px}
+  .toggle.off{background:rgba(238,230,211,.2)}
+  .toggle.off::after{left:3px;right:auto;background:var(--foam-dim)}
+
+  .watch .w-prod{font-weight:500;margin-bottom:2px;font-size:13px}
+  .watch .w-line{display:flex;justify-content:space-between;font-family:'JetBrains Mono';font-size:11px;color:var(--foam-dim)}
+  .watch-item{padding:12px 0;border-bottom:1px solid var(--line-soft)}
+  .watch-item:last-child{border:0}
+
+  @media(max-width:760px){
+    .shell{grid-template-columns:1fr}
+    .rail{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center}
+    .rail-foot{display:none}.navlabel{display:none}
+    .voyage h2{font-size:24px}.route{flex-direction:column;gap:18px}
+    .leg .line{display:none}.wrap{padding:24px 20px}.topbar{padding:16px 20px}.coords{font-size:9px}
+  }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto}}
+  :focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <aside class="rail">
+    <div class="brand">
+      <svg width="36" height="36" viewBox="0 0 34 34" fill="none" aria-hidden="true">
+        <defs>
+          <g id="sveg">
+            <line x1="17" y1="14" x2="17" y2="4" stroke="#c9a24b" stroke-width="1.6" stroke-linecap="round"/>
+            <line x1="13" y1="8" x2="21" y2="8" stroke="#c9a24b" stroke-width="1.6" stroke-linecap="round"/>
+          </g>
+        </defs>
+        <circle cx="17" cy="17" r="15.5" stroke="#c9a24b" stroke-width="1.1" opacity=".5"/>
+        <circle cx="17" cy="17" r="2" fill="#c9a24b"/>
+        <use href="#sveg" transform="rotate(0 17 17)"/>
+        <use href="#sveg" transform="rotate(45 17 17)"/>
+        <use href="#sveg" transform="rotate(90 17 17)"/>
+        <use href="#sveg" transform="rotate(135 17 17)"/>
+        <use href="#sveg" transform="rotate(180 17 17)"/>
+        <use href="#sveg" transform="rotate(225 17 17)"/>
+        <use href="#sveg" transform="rotate(270 17 17)"/>
+        <use href="#sveg" transform="rotate(315 17 17)"/>
+      </svg>
+      <h1>Knörr<span>Comercio que navega</span></h1>
+    </div>
+
+    <div class="navlabel">Travesía</div>
+    <button class="navbtn active" data-sec="bridge"><span class="dot"></span>Bitácora · Resumen</button>
+    <button class="navbtn" data-sec="carga"><span class="dot"></span>La Carga · Catálogo</button>
+    <button class="navbtn" data-sec="travesia"><span class="dot"></span>La Travesía · Mercado Libre</button>
+    <button class="navbtn" data-sec="horizonte"><span class="dot"></span>El Horizonte · Análisis</button>
+
+    <div class="navlabel">Más adelante</div>
+    <button class="navbtn"><span class="dot"></span>Facturación</button>
+    <button class="navbtn"><span class="dot"></span>Posventa</button>
+    <button class="navbtn"><span class="dot"></span>ERP</button>
+
+    <div class="rail-foot">
+      <b>Maqueta de demostración</b><br>
+      Datos de ejemplo · marca de trabajo "Knörr".
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="coords">RUMBO <b>NE 47°</b> · LAT 19.43°N · LON 99.13°O · CDMX</div>
+      <div class="tag">Maqueta</div>
+    </div>
+
+    <div class="wrap">
+
+      <section class="voyage">
+        <svg class="compass" width="108" height="108" viewBox="0 0 120 120" fill="none" aria-hidden="true">
+          <defs>
+            <g id="vegA">
+              <line x1="60" y1="52" x2="60" y2="18" stroke="#c9a24b" stroke-width="2" stroke-linecap="round"/>
+              <line x1="52" y1="26" x2="68" y2="26" stroke="#c9a24b" stroke-width="2" stroke-linecap="round"/>
+              <path d="M60 18 L53 10 M60 18 L67 10" stroke="#c9a24b" stroke-width="2" stroke-linecap="round"/>
+            </g>
+            <g id="vegB">
+              <line x1="60" y1="52" x2="60" y2="20" stroke="#c9a24b" stroke-width="2" stroke-linecap="round"/>
+              <line x1="53" y1="32" x2="67" y2="32" stroke="#c9a24b" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="60" cy="14" r="4.5" stroke="#c9a24b" stroke-width="2" fill="none"/>
+            </g>
+          </defs>
+          <circle cx="60" cy="60" r="52" stroke="#c9a24b" stroke-width="1" opacity=".4"/>
+          <circle cx="60" cy="60" r="7" stroke="#c9a24b" stroke-width="2" fill="none"/>
+          <circle cx="60" cy="60" r="1.6" fill="#c9a24b"/>
+          <use href="#vegA" transform="rotate(0 60 60)"/>
+          <use href="#vegB" transform="rotate(45 60 60)"/>
+          <use href="#vegA" transform="rotate(90 60 60)"/>
+          <use href="#vegB" transform="rotate(135 60 60)"/>
+          <use href="#vegA" transform="rotate(180 60 60)"/>
+          <use href="#vegB" transform="rotate(225 60 60)"/>
+          <use href="#vegA" transform="rotate(270 60 60)"/>
+          <use href="#vegB" transform="rotate(315 60 60)"/>
+        </svg>
+        <div class="voyage-inner">
+          <div class="eyebrow">La travesía de tu catálogo</div>
+          <h2>De tu bodega al mercado, y de vuelta con el mapa de lo que funciona.</h2>
+          <p>Importa todo tu catálogo una sola vez, publícalo y sincronízalo en Mercado Libre, y lee el rendimiento como una carta de navegación. Tres puertos, un solo timón.</p>
+
+          <div class="route">
+            <div class="leg done" data-go="carga">
+              <div class="line"></div>
+              <div class="port"><div class="pin">01</div>
+                <div class="pname">La Carga</div>
+                <div class="pdesc">Importa el catálogo con sus aplicaciones y posición (D/I).</div>
+                <div class="pstat">▲ 5,794 SKU listos</div></div>
+            </div>
+            <div class="leg done" data-go="travesia">
+              <div class="line"></div>
+              <div class="port"><div class="pin">02</div>
+                <div class="pname">La Travesía</div>
+                <div class="pdesc">Genera y publica en masa con compatibilidades válidas.</div>
+                <div class="pstat">▲ 2,000 publicaciones · 12 min</div></div>
+            </div>
+            <div class="leg" data-go="horizonte">
+              <div class="line"></div>
+              <div class="port"><div class="pin">03</div>
+                <div class="pname">El Horizonte</div>
+                <div class="pdesc">Vigila calidad de publicación, infracciones y competencia.</div>
+                <div class="pstat">○ análisis en vivo</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BRIDGE -->
+      <section class="section active" id="bridge">
+        <div class="sec-head">
+          <div><div class="sh-eye">Bitácora · Últimos 30 días</div>
+            <h3>El puente de mando</h3>
+            <p>Una sola pantalla con el estado de toda la operación en Mercado Libre.</p></div>
+          <button class="btn ghost">Exportar bitácora</button>
+        </div>
+        <div class="cards">
+          <div class="kpi"><div class="k-lab">Ingresos</div><div class="k-val">$842,300</div><div class="k-sub up">▲ 18.4% vs mes previo</div></div>
+          <div class="kpi"><div class="k-lab">Ventas</div><div class="k-val">1,396</div><div class="k-sub up">▲ 11.2%</div></div>
+          <div class="kpi"><div class="k-lab">Visitas</div><div class="k-val">61,820</div><div class="k-sub up">▲ 7.9%</div></div>
+          <div class="kpi"><div class="k-lab">Conversión</div><div class="k-val">2.26%</div><div class="k-sub up">▲ 0.3 pts</div></div>
+          <div class="kpi"><div class="k-lab">Preguntas sin responder</div><div class="k-val">14</div><div class="k-sub down">prom. 3h 12m</div></div>
+        </div>
+        <div class="grid2">
+          <div class="panel"><h4>Ingresos y visitas</h4><div class="ph">Tendencia diaria · últimos 30 días</div>
+            <canvas id="trend" height="150"></canvas></div>
+          <div class="panel"><h4>Productos a la cabeza</h4><div class="ph">Por ingresos generados</div>
+            <table><thead><tr><th>Producto</th><th style="text-align:right">Ingresos</th></tr></thead>
+              <tbody>
+                <tr><td>AG Proshock (amortiguador)</td><td class="price" style="text-align:right">$128,400</td></tr>
+                <tr><td>AG Confort (amortiguador)</td><td class="price" style="text-align:right">$96,720</td></tr>
+                <tr><td>AG Strut (amortiguador)</td><td class="price" style="text-align:right">$71,050</td></tr>
+                <tr><td>Resorte de suspensión</td><td class="price" style="text-align:right">$58,900</td></tr>
+                <tr><td>Balatas cerámicas</td><td class="price" style="text-align:right">$44,210</td></tr>
+              </tbody></table></div>
+        </div>
+      </section>
+
+      <!-- CARGA -->
+      <section class="section" id="carga">
+        <div class="sec-head">
+          <div><div class="sh-eye">Puerto 01 · El antes</div>
+            <h3>La Carga — tu catálogo a bordo</h3>
+            <p>Importa el catálogo una sola vez con lo que MELI exige para autopartes: aplicaciones (compatibilidades) y posición. Cada SKU ya sabe en cuántas publicaciones se convierte.</p></div>
+          <button class="btn">Importar catálogo</button>
+        </div>
+        <div class="panel" style="margin-bottom:18px">
+          <h4>Manifiesto de productos</h4><div class="ph">5,794 SKU → ≈16,662 publicaciones en MELI Tienda 1</div>
+          <table><thead><tr><th>SKU</th><th>Producto</th><th>Aplic.</th><th>Pos.</th><th>Publicaciones</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr><td class="sku">P2109050</td><td>AG Proshock · Fiat Palio Adventure / Strada / Ram 700</td><td class="mono">4</td><td class="mono">D/I</td><td class="mono">8</td><td><span class="badge b-ok">● Compatibilidades OK</span></td></tr>
+              <tr><td class="sku">4015599</td><td>AG Strut · Chevrolet Beat / Spark / Spark EV</td><td class="mono">3</td><td class="mono">D/I</td><td class="mono">6</td><td><span class="badge b-ok">● Compatibilidades OK</span></td></tr>
+              <tr><td class="sku">1235163</td><td>AG Confort · Toyota Hiace 2021-2023</td><td class="mono">1</td><td class="mono">D/I</td><td class="mono">2</td><td><span class="badge b-ok">● Compatibilidades OK</span></td></tr>
+              <tr><td class="sku">1252031</td><td>AG Confort · VW Transporter 2005-2020</td><td class="mono">1</td><td class="mono">D/I</td><td class="mono">2</td><td><span class="badge b-wait">● Revisar posición</span></td></tr>
+              <tr><td class="sku">1081017</td><td>AG Confort · Chevrolet Colorado / GMC Canyon (exc. rin 17"/18")</td><td class="mono">2</td><td class="mono">D/I</td><td class="mono">4</td><td><span class="badge b-warn">● Riesgo de infracción</span></td></tr>
+            </tbody></table>
+          <div class="pillrow">
+            <div class="pill"><svg width="12" height="12"><rect width="12" height="12" rx="2" fill="#3fa79f"/></svg>Plantilla Alephee</div>
+            <div class="pill"><svg width="12" height="12"><rect width="12" height="12" rx="2" fill="#c9a24b"/></svg>Catálogo AG</div>
+            <div class="pill"><svg width="12" height="12"><rect width="12" height="12" rx="2" fill="#1d6087"/></svg>Compatibilidades MELI</div>
+            <div class="pill" style="color:var(--brass)">+ Conectar fuente</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TRAVESIA -->
+      <section class="section" id="travesia">
+        <div class="sec-head">
+          <div><div class="sh-eye">Puerto 02 · El durante</div>
+            <h3>La Travesía — rumbo a Mercado Libre</h3>
+            <p>Genera en masa todas las publicaciones por aplicación y posición, con compatibilidades válidas para no infraccionarte, y mantiene el puente con Alephee y el stock.</p></div>
+          <button class="btn">Publicar seleccionados</button>
+        </div>
+        <div class="cards">
+          <div class="kpi"><div class="k-lab">Publicaciones generadas</div><div class="k-val">2,000</div><div class="k-sub up">en 12 min · vs meses de trabajo manual</div></div>
+          <div class="kpi"><div class="k-lab">Compatibilidades validadas</div><div class="k-val">100%</div><div class="k-sub up">aplicación y posición correctas</div></div>
+          <div class="kpi"><div class="k-lab">Infracciones evitadas</div><div class="k-val">47</div><div class="k-sub down">detectadas antes de publicar</div></div>
+        </div>
+        <div class="panel">
+          <h4>Estado de sincronización</h4><div class="ph">Tienda 2 · Mercado Libre México · puente con Alephee activo</div>
+          <div class="sync-row"><div><div class="sync-name">Puente Alephee → Mercado Libre</div><div class="sync-meta">cierra la desconexión actual</div></div><div class="toggle" role="switch" aria-checked="true" tabindex="0"></div></div>
+          <div class="sync-row"><div><div class="sync-name">Validar compatibilidades antes de publicar</div><div class="sync-meta">aplicación + posición · evita infracciones</div></div><div class="toggle" role="switch" aria-checked="true" tabindex="0"></div></div>
+          <div class="sync-row"><div><div class="sync-name">Asignar posición D/I automática</div><div class="sync-meta">deja de hacerlo una por una</div></div><div class="toggle" role="switch" aria-checked="true" tabindex="0"></div></div>
+          <div class="sync-row"><div><div class="sync-name">Pausar al quedar sin stock</div><div class="sync-meta">protege tu reputación</div></div><div class="toggle" role="switch" aria-checked="true" tabindex="0"></div></div>
+        </div>
+      </section>
+
+      <!-- HORIZONTE -->
+      <section class="section" id="horizonte">
+        <div class="sec-head">
+          <div><div class="sh-eye">Puerto 03 · El después</div>
+            <h3>El Horizonte — leer el mar</h3>
+            <p>El análisis de rendimiento y de la competencia: lo que ofrecen herramientas como Real Trends, dentro de tu propio puente de mando.</p></div>
+          <button class="btn ghost">Generar reporte</button>
+        </div>
+        <div class="grid2">
+          <div class="panel"><h4>Posición frente a la competencia</h4><div class="ph">Tu precio vs. el más bajo del mercado</div>
+            <div class="watch">
+              <div class="watch-item"><div class="w-prod">Amortiguador delantero gas</div><div class="w-line"><span>Tú: $1,290 · rank #2</span><span class="up">competidor +$110 ▲</span></div></div>
+              <div class="watch-item"><div class="w-prod">Balatas cerámicas delanteras</div><div class="w-line"><span>Tú: $640 · rank #5</span><span class="down">competidor −$80 ▼</span></div></div>
+              <div class="watch-item"><div class="w-prod">Resorte de suspensión</div><div class="w-line"><span>Tú: $980 · rank #1</span><span class="up">líder de categoría ▲</span></div></div>
+              <div class="watch-item"><div class="w-prod">Base para amortiguador</div><div class="w-line"><span>Tú: $470 · rank #8</span><span class="down">competidor −$35 ▼</span></div></div>
+            </div></div>
+          <div class="panel"><h4>Salud de tus publicaciones</h4><div class="ph">Calidad según criterios de Mercado Libre</div>
+            <canvas id="cats" height="200"></canvas></div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  const nav=document.querySelectorAll('.navbtn[data-sec]'), secs=document.querySelectorAll('.section');
+  function go(id){
+    secs.forEach(s=>s.classList.toggle('active', s.id===id));
+    nav.forEach(b=>b.classList.toggle('active', b.dataset.sec===id));
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  nav.forEach(b=>b.addEventListener('click',()=>go(b.dataset.sec)));
+  document.querySelectorAll('.leg[data-go]').forEach(l=>l.addEventListener('click',()=>go(l.dataset.go)));
+
+  document.querySelectorAll('.toggle').forEach(t=>{
+    const flip=()=>{const off=t.classList.toggle('off');t.setAttribute('aria-checked',String(!off));};
+    t.addEventListener('click',flip);
+    t.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();flip();}});
+  });
+
+  const grid='rgba(238,230,211,.08)';
+  Chart.defaults.color='#a9b6c4'; Chart.defaults.font.family="'Inter',sans-serif";
+  const days=Array.from({length:30},(_,i)=>i+1);
+  const rev=[18,21,19,24,22,28,31,27,33,30,29,35,38,34,40,37,42,39,44,46,43,49,52,48,54,51,57,55,61,63].map(v=>v*1000);
+  const vis=[1.2,1.4,1.3,1.6,1.5,1.8,2.0,1.7,2.1,1.9,1.8,2.2,2.4,2.1,2.5,2.3,2.6,2.4,2.7,2.9,2.6,3.0,3.2,2.9,3.3,3.1,3.5,3.3,3.7,3.9].map(v=>v*1000);
+
+  new Chart(document.getElementById('trend'),{
+    type:'line',
+    data:{labels:days,datasets:[
+      {label:'Ingresos ($)',data:rev,borderColor:'#c9a24b',backgroundColor:'rgba(201,162,75,.12)',fill:true,tension:.4,pointRadius:0,borderWidth:2,yAxisID:'y'},
+      {label:'Visitas',data:vis,borderColor:'#3fa79f',backgroundColor:'transparent',tension:.4,pointRadius:0,borderWidth:2,yAxisID:'y1'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{labels:{boxWidth:10,boxHeight:10,usePointStyle:true,font:{size:11}}}},
+      scales:{x:{grid:{color:grid},ticks:{maxTicksLimit:6,font:{size:10}}},
+        y:{grid:{color:grid},ticks:{callback:v=>'$'+(v/1000)+'k',font:{size:10}}},
+        y1:{position:'right',grid:{display:false},ticks:{font:{size:10}}}}}
+  });
+
+  new Chart(document.getElementById('cats'),{
+    type:'doughnut',
+    data:{labels:['Óptima','Buena','A mejorar','Con observación','Infraccionada'],
+      datasets:[{data:[44,31,15,7,3],backgroundColor:['#3fa79f','#c9a24b','#1d6087','#e0c074','#d6573c'],borderColor:'#071a2b',borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{legend:{position:'right',labels:{boxWidth:9,boxHeight:9,usePointStyle:true,font:{size:11},padding:10}}}}
+  });
+</script>
+</body>
+</html>
